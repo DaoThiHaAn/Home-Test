@@ -1,0 +1,36 @@
+name: OptiBot Daily Sync Job
+
+on:
+  schedule:
+    # Định dạng Cron: Chạy vào lúc 02:00 sáng mỗi ngày (Giờ UTC)
+    - cron: '0 2 * * *'
+  # Thuộc tính này cho phép bạn vào giao diện GitHub bấm nút "Run workflow" để chạy thử bằng tay bất cứ lúc nào
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Bước 1: Kéo code từ Repo GitHub về máy ảo của GitHub
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Bước 2: Build Docker Image từ Dockerfile bạn đã viết
+      - name: Build Docker Image
+        run: docker build -t optibot-scraper .
+
+      # Bước 3: Chạy Container và truyền API Key bảo mật từ GitHub Secrets vào
+      - name: Run Scraper Container
+        env:
+          MY_SECRET_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          docker run -e API_KEY="$MY_SECRET_KEY" optibot-scraper
+
+      # Bước 4 (Extra Credit): Đẩy file kết quả (Artefact) lên GitHub nếu code Python có sinh file
+      - name: Upload Last Run Artefact
+        if: always() # Luôn chạy bước này kể cả khi code bước trên bị lỗi
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-run-report
+          path: last_run.txt # File txt/json bạn ghi ra ở cuối file main.py (nếu có)
