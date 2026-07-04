@@ -1,7 +1,7 @@
 """Scrapper for OptiSigns support articles."""
 
 import requests
-from utils import get_articles_api
+from utils import get_articles_api_url
 
 
 def get_articles(api, NUM_ARTICLES=None):
@@ -22,4 +22,4 @@ def get_articles(api, NUM_ARTICLES=None):
     
 if __name__ == "__main__":
     # Test the scrapper by fetching 100 articles
-    get_articles(get_articles_api(), 100)
+    get_articles(get_articles_api_url(), 100)

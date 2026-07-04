@@ -3,7 +3,7 @@
 import os
 import time
     
-def upload_markdown_files_to_gemini(client, file_path, file_search_store):
+def upload_markdown_file_to_gemini(client, file_path, file_search_store):
     # Gemini automatically does the chunkings and indexing
     operation = client.file_search_stores.upload_to_file_search_store(
         file = file_path,
@@ -30,7 +30,7 @@ def upload_markdown_files_to_gemini(client, file_path, file_search_store):
         
 
 # Create vector store for RAG
-def create_file_search_store(client, file_search_store_name):    
+def _create_file_search_store(client, file_search_store_name):    
     file_search_store = client.file_search_stores.create(
         config = {
             'display_name': file_search_store_name,
@@ -38,19 +38,15 @@ def create_file_search_store(client, file_search_store_name):
         }
     )
     
-    # Upload markdown files to the file search store
-    embedded_files_count = 0
-    for file in os.listdir("articles_markdown"):
-        if not file.endswith(".md"):
-            continue
-        
-        file_path = os.path.join("articles_markdown", file)
-        
-        chunks_count = upload_markdown_files_to_gemini(client, file_path, file_search_store)
-        embedded_files_count += 1
-        
-        print(f"Embedded file {embedded_files_count} - {chunks_count} chunks")
-        
-    print(f"File search store created: {file_search_store.name}") # The file search store is created and last indefinitely with a unique name
+    print(f"Created new Gemini File Search store: {file_search_store.name}") # Each store has a unique name
     
-    return file_search_store
+
+# File Search Store is created only once
+def get_or_create_file_search_store(client, display_name):
+    stores = client.file_search_stores.list()
+
+    for store in stores:
+        if store.display_name == display_name:
+            return store
+
+    return _create_file_search_store(client, display_name)

@@ -1,46 +1,67 @@
-This is a coding home test that requires to implement a mini chatbot supporting users in an app guidance
+** OptiBot Mini Clone**
+Daily scraper and Gemini File Search loader for OptiSigns support articles.
 
-Deployment:
+# Setup
 
-Gemini File Search: 
-**Setup**
-This project uses Gemini API for file search.
-1. Clone the repository
-2. Install dependencies using
-    ```bash
-    pip install -r requirements.txt
-    ```
-3. Create a free [Google AI Studio](https://aistudio.google.com/) account
-4. Create a new API key for the new project
-5. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (if not already installed) and ensure it is running
+1. Create a Google AI Studio API key.
+2. Copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
+3. Install dependencies:
 
-**How To Run Locally**
-1. Create a `.env` file in the root directory of the project in the same format as `.env.example` and fill in the required values
-2. Build the Docker image using the command:
-   ```bash
-    docker build -t opti-bot
-    ```
+```bash
+pip install -r requirements.txt
+```
 
-3. Run the Docker container using the command:
-   ```bash
-    docker run -e GEMINI_API_KEY="YourActualAPIKeyHere" opti-bot
-    ```
+# Run Locally
 
-**Link To Daily Job Logs**
+Run once from Python:
 
-**Sample Run**
-Sample question: "How do I add a YouTube video?"
-Result:
+```bash
+python main.py
+```
 
+Or run once with Docker:
 
-**Approach Explained**
-1. Markdown conversion
-- Articles from [support.optisigns.com](https://support.optisigns.com/en/) are retrieved using the [Zendesk Articles API](https://developer.zendesk.com/api-reference/help_center/help-center-api/articles/).
-- The retrieved articles are converted to Markdown format using the [markdownify](https://pypi.org/project/markdownify/) library.
-- The converted Markdown files are stored within the `articles_markdown` folder.
-  
-2. Build AI assistant
-- The converted Markdown files are indexed using the [Gemini File Search API](https://ai.google.dev/gemini-api/docs/file-search
-).
-- The embedded files are chunked automatically by default.
-- 
+```bash
+docker build -t optibot-scraper .
+docker run -e API_KEY="YOUR_KEY_HERE" optibot-scraper
+```
+
+The first successful run prints `Store: fileSearchStores/...`. Save that value as
+`GEMINI_FILE_SEARCH_STORE_NAME` in `.env` or GitHub Secrets so later daily runs update
+the same Gemini File Search store instead of creating a new one.
+
+# Google AI Studio Agent
+
+In AI Studio, create a Playground chat/agent with this system prompt:
+
+```text
+You are OptiBot, the customer-support bot for OptiSigns.com.
+* Tone: helpful, factual, concise.
+* Only answer using the uploaded docs.
+* Max 5 bullet points; else link to the doc.
+* Cite up to 3 "Article URL:" lines per reply.
+```
+
+Use the Gemini File Search store printed by `main.py` as the knowledge source. Ask:
+`How do I add a YouTube video?` and save a screenshot showing an answer with citations.
+
+# Daily Job
+
+`.github/workflows/daily_jobs.yml` runs the Docker job daily at 02:00 UTC and uploads
+`last_run.txt` as the daily run artifact. Configure repository secrets:
+
+```text
+GEMINI_API_KEY
+GEMINI_FILE_SEARCH_STORE_NAME
+```
+
+Each run re-scrapes articles, writes Markdown to `articles_markdown`, compares each
+`slug_updatedTimestamp.md` against Gemini File Search documents, uploads only new or
+updated files, and logs `added`, `updated`, `skipped`, files embedded, and estimated
+chunks embedded.
+
+Chunking strategy: Gemini File Search automatically splits Markdown into chunks for embedding. Each chunk is
+
+Daily job logs: add the GitHub Actions run URL here after the first scheduled/manual run.
+
+Screenshot: add the AI Studio answer screenshot here before submission.

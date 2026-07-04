@@ -1,65 +1,84 @@
-"""Daily jobs to update the articles in the database."""
+"""Daily sync logic for OptiSigns articles."""
 
-from utils import get_incremental_articles_api_url
-from scrapper import get_articles
 from converter import convert_article_to_markdown, save_markdown_to_file
-from uploader import upload_markdown_files_to_gemini
-import os
+from uploader import upload_markdown_file_to_gemini
 
 
-def daily_jobs(client, file_search_store):
-    existing_articles = client.file_search_stores.documents.list(parent=f"fileSearchStores/{file_search_store.name}")
-    store_state = {}  #{slug: {name: str, timestamp: int}}
-    timestamps = []
+def _split_slug_and_timestamp(display_name):
+    """ Split the file display name into slug and timestamp."""
     
-    # Get the most recent timestamp in Unix format from the existing articles
-    for article in existing_articles:
-        a_slug, a_timestamp = article.display_name.rsplit("_", 1)
-        store_state[a_slug] = {"name": article.display_name, "timestamp": a_timestamp}
-        timestamps.append(a_timestamp)
-        
-    most_recent_timestamp = max(timestamps) 
-    incremental_api_url = get_incremental_articles_api_url(most_recent_timestamp)
+    stem = display_name.removesuffix(".md")
+    slug, timestamp = stem.rsplit("_", 1)
+    return slug, int(timestamp)
+
+
+def _existing_articles_by_slug(client, file_search_store):
+    store_name = getattr(file_search_store, "name", file_search_store)
+
+    state = {}
+
+    for document in client.file_search_stores.documents.list(parent=store_name):
+        display_name = getattr(document, "display_name", "")
+
+        if not display_name.endswith(".md"):
+            continue
+
+        slug, timestamp = _split_slug_and_timestamp(display_name)
+
+        state[slug] = {
+            "document": document,  # Store the document object for potential deletion
+            "timestamp": timestamp,
+        }
+
+    return state
+
+
+def sync_articles_to_store(client, file_search_store, new_scrapped_articles):
+    """Add the newly scraped articles to the Gemini File Search store, skipping unchanged articles."""
     
-    # Fetch only newly-updated articles from the incremental API
-    newly_updated_articles = get_articles(incremental_api_url)
-    
-    added_count = 0
-    updated_count = 0
-    skipped_count = 0
-    
-    for article in newly_updated_articles:
+    # Get all existing articles in the store 
+    existing_by_slug = _existing_articles_by_slug(client, file_search_store)
+
+    counts = {
+        "added": 0,
+        "updated": 0,
+        "skipped": 0,
+    }
+
+    for article in new_scrapped_articles:
         markdown_content, file_name = convert_article_to_markdown(article)
-        slug, unix_timestamp = file_name.rsplit("_", 1)
-        
-        # Temporarily save the .md file
-        temp_filename = save_markdown_to_file(markdown_content, file_name)
-        
-        # Check state of .md file
-        if slug not in store_state:
-            # New article, add it to the store
-            added_count += 1
-            
+
+        slug, timestamp = file_name.rsplit("_", 1)
+        timestamp = int(timestamp.removesuffix(".md"))
+
+        existing = existing_by_slug.get(slug)
+
+        # New article
+        if existing is None:
+            counts["added"] += 1
+
+        # Unchanged
+        elif timestamp == existing["timestamp"]:
+            counts["skipped"] += 1
+            continue
+
+        # Updated
         else:
-            # Updated article, delete old version from the File Search Store
-            updated_count += 1
+            counts["updated"] += 1
+
+            # Delete the existing document from the store before uploading the new version
             client.file_search_stores.documents.delete(
-                name = f"fileSearchStores/{file_search_store.name}/documents/{store_state[slug]['name']}_{store_state[slug]['timestamp']}.md",
-                config = {"force": True}
+                name=existing["document"].name,
+                config={"force": True},
             )
-         
-        # Upload new file File Search Store   
-        upload_markdown_files_to_gemini(client, f"articles_markdown/{file_name}", file_search_store.name)
-        
-        # Delete the temporary .md file after uploading
-        if os.path.exists(temp_filename):
-            os.remove(temp_filename)
-    
-    skipped_count = len(store_state) - updated_count
-    
-    print("\n=== JOB LOG COUNTS ===")
-    print(f"Added: {added_count}")
-    print(f"Updated: {updated_count}")
-    print(f"Skipped: {skipped_count}")
-    print("=======================")
-    
+
+        # Temporarily save the new .md file
+        markdown_path = save_markdown_to_file(markdown_content, file_name)
+
+        upload_markdown_file_to_gemini(
+            client,
+            markdown_path,
+            file_search_store,
+        )
+
+    return counts
