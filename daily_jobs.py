@@ -17,6 +17,8 @@ def _existing_articles_by_slug(client, file_search_store):
 
     state = {}
 
+    print("File Search Store object:", file_search_store)
+    
     for document in client.file_search_stores.documents.list(parent=store_name):
         display_name = getattr(document, "display_name", "")
 
@@ -45,6 +47,7 @@ def sync_articles_to_store(client, file_search_store, new_scrapped_articles):
         "skipped": 0,
     }
 
+    embedded_count = 0
     for article in new_scrapped_articles:
         markdown_content, file_name = convert_article_to_markdown(article)
 
@@ -79,6 +82,8 @@ def sync_articles_to_store(client, file_search_store, new_scrapped_articles):
             client,
             markdown_path,
             file_search_store,
+            file_number=embedded_count + 1
         )
+        embedded_count += 1
 
     return counts

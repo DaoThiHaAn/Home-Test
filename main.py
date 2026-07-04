@@ -5,6 +5,7 @@ from daily_jobs import sync_articles_to_store
 from scrapper import get_articles
 from uploader import get_or_create_file_search_store
 from utils import  get_articles_api_url, get_client
+from datetime import datetime
 
 
 def convert_save_articles_to_markdown(articles):
@@ -17,6 +18,7 @@ def write_last_run(counts, store_name):
     """Write log artefacts to last_run.txt."""
     lines = [
         "=== JOB LOG COUNTS ===",
+        f"Last run timestamp: {datetime.now().isoformat()}",
         f"Store: {store_name}",
         f"Added: {counts['added']}",
         f"Updated: {counts['updated']}",
@@ -30,7 +32,7 @@ def write_last_run(counts, store_name):
 
 
 def main():
-    ARTICLE_COUNT = 100 # at least 30
+    ARTICLE_COUNT = 30 # at least 30
     
     # TASK 1: Scrape ⇒ Markdown 
     articles = get_articles(get_articles_api_url(), ARTICLE_COUNT)
