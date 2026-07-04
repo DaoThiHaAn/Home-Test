@@ -5,10 +5,11 @@ from utils import get_articles_api_url
 
 
 def get_articles(api, NUM_ARTICLES=None):
+    print(f"Scraping articles from API: {api}")
     response = requests.get(api)
 
     if response.status_code != 200:
-        print("Failed to retrieve articles!")
+        print("Error:", response.status_code, response.text)
     else:
         log_string = f"Successfully retrieved {NUM_ARTICLES} articles." if NUM_ARTICLES else "Successfully retrieved articles."
         print(log_string)

@@ -14,8 +14,8 @@ def get_client():
     return genai.Client()
 
 
-def get_incremental_articles_api_url(last_timestamp):
-    return f"{os.getenv("INCREMENTAL_ARTICLES_API")}{last_timestamp}"
+def get_desc_updated_articles_api_url():
+    return f"{os.getenv("ARTICLES_API")}?sort_by=updated_at&sort_order=asc"
 
 
 def create_file_name(title, unix_timestamp):

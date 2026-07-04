@@ -37,10 +37,13 @@ def _create_file_search_store(client, file_search_store_name):
 
 # File Search Store is created only once
 def get_or_create_file_search_store(client, display_name):
+    '''Return (file_search_store, is_new) 
+    where is_new is True if the store was created, False if it already existed.'''
+    
     stores = client.file_search_stores.list()
 
     for store in stores:
         if store.display_name == display_name:
-            return store
+            return store, False
 
-    return _create_file_search_store(client, display_name)
+    return _create_file_search_store(client, display_name), True

@@ -12,12 +12,6 @@ You are OptiBot, the customer-support bot for OptiSigns.com.
 """
 
 
-def create_chatbot(client, file_search_store_name="OptiSigns Search Store"):
-    file_search_store = get_or_create_file_search_store(client, file_search_store_name)
-    print(f"File search store ready: {file_search_store.name}")
-    return file_search_store
-
-
 def ask_optibot(client, file_search_store, question):
     interaction = client.interactions.create(
         model="gemini-3.5-flash",
@@ -49,3 +43,10 @@ def sanity_check(file_search_store, client):
     response = ask_optibot(client, file_search_store, question)
     print("Question: ", question)
     print("\n[OptiBot Response]:\n", response)
+
+if __name__ == "__main__":
+    from utils import get_client
+
+    client = get_client()
+    file_search_store = get_or_create_file_search_store(client, "OptiSigns Search Store")[0]
+    sanity_check(file_search_store, client)
