@@ -19,6 +19,7 @@ jobs:
       - name: Run OptiBot Container
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ARTICLES_API: ${{ secrets.ARTICLES_API }}
         run: |
           docker run \
             -e GEMINI_API_KEY="$GEMINI_API_KEY" \
