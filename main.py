@@ -14,7 +14,7 @@ def write_last_run(counts, store_name):
     lines = [
         "=== JOB LOG COUNTS ===",
         f"Last run timestamp finished at: {datetime.now().isoformat()}",
-        f"Store: {store_name}",
+        # f"Store: {store_name}",
         f"Added: {counts['added']}",
         f"Updated: {counts['updated']}",
         f"Skipped: {counts['skipped']}",

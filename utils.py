@@ -14,7 +14,7 @@ def get_articles_api_url() -> str:
 
 
 def get_client():
-    return genai.Client()
+    return genai.Client(api_key=os.getenv("API_KEY"))
 
 
 def get_desc_updated_articles_api_url():

@@ -2,7 +2,7 @@ name: OptiBot Daily Sync Job
 
 on:
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 4 * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,10 +18,10 @@ jobs:
 
       - name: Run OptiBot Container
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          API_KEY: ${{ secrets.API_KEY }}
         run: |
           docker run \
-            -e GEMINI_API_KEY="$GEMINI_API_KEY" \
+            -e API_KEY="$API_KEY" \
             optibot
 
       - name: Upload Last Run Artefact
