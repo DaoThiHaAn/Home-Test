@@ -39,9 +39,6 @@ You are OptiBot, the customer-support bot for OptiSigns.com.
 * Cite up to 3 "Article URL:" lines per reply.
 ```
 
-Use the Gemini File Search store printed by `main.py` as the knowledge source. Ask:
-`How do I add a YouTube video?` and save a screenshot showing an answer with citations.
-
 # Daily Job
 
 `.github/workflows/daily_jobs.yml` runs the Docker job daily at 02:00 UTC and uploads
@@ -49,15 +46,13 @@ Use the Gemini File Search store printed by `main.py` as the knowledge source. A
 
 ```text
 GEMINI_API_KEY
-GEMINI_FILE_SEARCH_STORE_NAME
 ```
 
 Each run re-scrapes articles, writes Markdown to `articles_markdown`, compares each
 `slug_updatedTimestamp.md` against Gemini File Search documents, uploads only new or
-updated files, and logs `added`, `updated`, `skipped`, files embedded, and estimated
-chunks embedded.
+updated files, and logs `added`, `updated`, `skipped`.
 
-Chunking strategy: Gemini File Search automatically splits Markdown into chunks for embedding. Each chunk is
+Chunking strategy: Gemini File Search automatically splits Markdown into chunks for embedding.
 
 Daily job logs: add the GitHub Actions run URL here after the first scheduled/manual run.
 
