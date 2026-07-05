@@ -22,13 +22,10 @@ python main.py
 Or run once with Docker:
 
 ```bash
-docker build -t optibot-scraper .
+docker build -t optibot .
 docker run -e API_KEY="YOUR_KEY_HERE" optibot-scraper
 ```
 
-The first successful run prints `Store: fileSearchStores/...`. Save that value as
-`GEMINI_FILE_SEARCH_STORE_NAME` in `.env` or GitHub Secrets so later daily runs update
-the same Gemini File Search store instead of creating a new one.
 
 # Google AI Studio Agent
 

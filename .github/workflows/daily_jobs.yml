@@ -14,17 +14,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker Image
-        run: docker build -t optibot-scraper .
+        run: docker build -t optibot .
 
-      - name: Run Scraper Container
+      - name: Run OptiBot Container
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_FILE_SEARCH_STORE_NAME: ${{ secrets.GEMINI_FILE_SEARCH_STORE_NAME }}
         run: |
           docker run \
             -e GEMINI_API_KEY="$GEMINI_API_KEY" \
-            -e GEMINI_FILE_SEARCH_STORE_NAME="$GEMINI_FILE_SEARCH_STORE_NAME" \
-            optibot-scraper
+            optibot
 
       - name: Upload Last Run Artefact
         if: always()

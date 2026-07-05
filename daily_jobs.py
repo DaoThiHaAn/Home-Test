@@ -44,7 +44,7 @@ def sync_articles_to_store(client, file_search_store, new_scrapped_articles):
     counts = {
         "added": 0,
         "updated": 0,
-        "skipped": 0,
+        "skipped": len(existing_by_slug),  # Start with the count of existing articles
     }
 
     embedded_count = 0
@@ -59,15 +59,16 @@ def sync_articles_to_store(client, file_search_store, new_scrapped_articles):
         # New article
         if existing is None:
             counts["added"] += 1
+            counts["skipped"] -= 1
 
         # Unchanged
         elif timestamp == existing["timestamp"]:
-            counts["skipped"] += 1
             continue
 
         # Updated
         else:
             counts["updated"] += 1
+            counts["skipped"] -= 1
 
             # Delete the existing document from the store before uploading the new version
             client.file_search_stores.documents.delete(

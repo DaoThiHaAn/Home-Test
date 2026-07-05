@@ -15,7 +15,7 @@ def get_client():
 
 
 def get_desc_updated_articles_api_url():
-    return f"{os.getenv("ARTICLES_API")}?sort_by=updated_at&sort_order=asc"
+    return f'{os.getenv("ARTICLES_API")}?sort_by=updated_at&sort_order=desc'
 
 
 def create_file_name(title, unix_timestamp):
